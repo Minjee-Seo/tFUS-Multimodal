@@ -1,6 +1,9 @@
 # helpers
 import os
+import sys
 import torch
+from datetime import timedelta
+from time import time
 import numpy as np
 from tqdm import tqdm
 from typing import Tuple
@@ -116,18 +119,14 @@ def calculate_delta(pred, target):
     return ratio
 
 def batch_metrics(pred_list, target_list):
-    '''
-    input : pytorch tensor
-    computes Dice score while training and validation
-    '''
     total_dice = 0
     total_dist = 0
     total_delta = 0
     batch_size = pred_list.size(0)
     
     for i in range(batch_size):
-        pred = pred_list[i]
-        target = target_list[i]
+        pred = pred_list[i].detach()
+        target = target_list[i].detach()
         
         dice = calculate_dice(pred, target)
         dist = calculate_dist(pred, target)
@@ -138,6 +137,171 @@ def batch_metrics(pred_list, target_list):
         total_delta += delta
         
     return total_dice/batch_size, total_dist/batch_size, total_delta/batch_size
+
+def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, device, scheduler=None):
+    
+    loss_tot = 0
+    dice_tot = 0
+    dist_tot = 0
+    delta_tot = 0
+    criterion = torch.nn.MSELoss().to(device)
+    total_batches = train_epoch * (len(train_dataloader))
+    prev_time = time()
+    
+    for i, batch in enumerate(train_dataloader):
+        
+        # Model inputs
+        ff = batch["A"].unsqueeze(1).to(device)
+        skull = batch["S"].unsqueeze(1).to(device)
+        target = batch["B"].unsqueeze(1).to(device)
+        tinput = batch["T"].to(device)
+        
+        scaler = MinMaxScaling(ff)
+        ff = scaler.fit_transform(ff, ff=False)
+        target = scaler.fit_transform(target, ff=True)
+
+        optimizer.zero_grad()
+
+        # compute loss
+        pred = model(ff, skull, tinput)
+        
+        loss = criterion(pred, target)
+        loss.mean().backward()
+        loss_tot += loss.mean().item()     
+        
+        optimizer.step()
+        
+        # Calculate dice score
+        train_dice, train_dist, train_delta = batch_metrics(pred, target)
+        dice_tot += train_dice
+        dist_tot += train_dist
+        delta_tot += train_delta
+        
+        batches_done = (epoch - 1) * (len(train_dataloader)) + i + 1
+        batches_left = total_batches - batches_done
+        
+        time_remain = timedelta(seconds=batches_left * (time() - prev_time))
+        prev_time = time()
+
+        sys.stdout.write(
+            "\r[Epoch %d/%d] [Train batch %d/%d] [loss : %f] [Dice : %.2f] [Dist : %.2f] [Delta : %.2f] [Train ETA : %s]"
+            % (
+                epoch,
+                train_epoch,
+                i+1,
+                len(train_dataloader),
+                loss.mean().item(),
+                train_dice*100,
+                train_dist,
+                train_delta*100,
+                time_remain
+            )
+        )
+    
+    if scheduler!=None: scheduler.step()
+    
+    return dice_tot/len(train_dataloader), dist_tot/len(train_dataloader), delta_tot/len(train_dataloader)
+    
+def val_one_epoch(epoch, train_epoch, model, valid_dataloader, device):
+
+    loss_tot = 0
+    dice_tot = 0
+    dist_tot = 0
+    delta_tot = 0
+    criterion = torch.nn.MSELoss().to(device)
+    
+    total_batches = train_epoch * (len(valid_dataloader))
+    prev_time = time()
+
+    with torch.no_grad():
+        
+        for i, batch in enumerate(valid_dataloader):
+            
+            # Model inputs
+            ff = batch["A"].unsqueeze(1).to(device)
+            skull = batch["S"].unsqueeze(1).to(device)
+            target = batch["B"].unsqueeze(1).to(device)
+            tinput = batch["T"].to(device)
+
+            scaler = MinMaxScaling(ff)
+            ff = scaler.fit_transform(ff, ff=False)
+            target = scaler.fit_transform(target, ff=True)
+
+            # compute loss
+            pred = model(ff, skull, tinput)
+            loss = criterion(pred, target)
+            loss_tot += loss.mean().item()     
+            
+            # Calculate dice score
+            valid_dice, valid_dist, valid_delta = batch_metrics(pred, target)
+            dice_tot += valid_dice
+            dist_tot += valid_dist
+            delta_tot += valid_delta
+            
+            batches_done = (epoch - 1) * (len(valid_dataloader)) + i + 1
+            batches_left = total_batches - batches_done
+            
+            time_remain = timedelta(seconds=batches_left * (time() - prev_time))
+            prev_time = time()
+
+            sys.stdout.write(
+                "\r[Epoch %d/%d] [Valid batch %d/%d] [loss : %f] [Dice : %.2f] [Dist : %.2f] [Delta : %.2f] [Val ETA : %s]"
+                % (
+                    epoch,
+                    train_epoch,
+                    i+1,
+                    len(valid_dataloader),
+                    loss.mean().item(),
+                    valid_dice*100,
+                    valid_dist,
+                    valid_delta*100,
+                    time_remain
+                )
+            )
+        
+    return dice_tot/len(valid_dataloader)
+
+def eval(model, test_dataloader, device):
+
+    pred_list = []
+    target_list = []
+    
+    total_dice = []
+    total_dist = []
+    total_delta = []
+    
+    model.eval()
+    with torch.no_grad():
+        with tqdm(test_dataloader, unit='batch') as testprogress:
+            for batch in testprogress:
+
+                # Model inputs
+                ff = batch["A"].unsqueeze(1).to(device)
+                skull = batch["S"].unsqueeze(1).to(device)
+                target = batch["B"].unsqueeze(1)
+                tinput = batch["T"].to(device)
+                
+                # Optional : apply MinMaxscaling to inputs
+                scaler = MinMaxScaling(ff)
+                ff = scaler.fit_transform(ff, ff=False)
+                target = scaler.fit_transform(target, ff=True)
+
+                # output prediction
+                pred = model(ff, skull, tinput).cpu()
+                dice, dist, delta = batch_metrics(pred, target)
+
+                total_dice.append(dice)
+                total_dist.append(dist)
+                total_delta.append(delta)
+                
+                pred_list.append(pred.squeeze().detach())
+                target_list.append(target.squeeze())
+
+    # flattening result list
+    target_list = [item for sublist in target_list for item in sublist]
+    pred_list = [item for sublist in pred_list for item in sublist]
+
+    return target_list, pred_list, total_dice, total_dist, total_delta
     
 def savefig(results, pj_name, thres=False):
     

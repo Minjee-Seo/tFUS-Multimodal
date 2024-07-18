@@ -390,7 +390,7 @@ class StageModule(nn.Module):
         return x
 
 
-class SwinTransformer(nn.Module):
+class SwinUNet(nn.Module):
     def __init__(self, device='cpu', in_dim=96, dropout_attn=0.1, dropout_mlp=0.1):
         super().__init__()
 

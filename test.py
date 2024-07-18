@@ -8,74 +8,20 @@ import torch
 import warnings
 warnings.filterwarnings("ignore")
 
-from loader import load_dataset
-from models_cnn import *
-from utils import *
+from dataset import load_dataset
+from models_cnn import CNNModel
+from models_swin import SwinUNet
+from utils import eval, savefig
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--cuda', action='store_true', default=True, help="Use GPU operation")
+parser.add_argument('--cuda', action='store_true', default=False, help="Use GPU")
 parser.add_argument('--batch_size', type=int, default=8, help="Test batch size")
 parser.add_argument('--modality', type=str, default='mri', help="Select med.image modality (CT/MR)")
-parser.add_argument('--run_name', type=str, default='test_run', help="run name to load")
-parser.add_argument('--run_epoch', type=int, default=200, help="saved model epoch")
-parser.add_argument('--parallel', action='store_true', default=False)
+parser.add_argument('--model', type=str, default='unet', help="Choose model to train : [ae/unet/swin]")
+parser.add_argument('--run_name', type=str, default='test_run', help="project name to load")
+parser.add_argument('--run_epoch', type=int, default=200, help="Trained epoch")
+parser.add_argument('--plot', action='store_true', default=False, help="Save result images")
 opt = parser.parse_args()
-
-def eval(model, test_dataloader):
-
-    pred_list = []
-    target_list = []
-    dice_score = []
-    
-    model.eval()
-    with torch.no_grad():
-        for i, batch in enumerate(test_dataloader):
-            
-            tic = time.time()
-            
-            # Model inputs
-            ff = batch["A"].unsqueeze(1).to(device)
-            skull = batch["S"].unsqueeze(1).to(device)
-            target = batch["B"]
-            tinput = batch["T"].to(device)
-            
-            # Optional : apply MinMaxscaling to inputs
-            scaler = MinMaxScaling(ff)
-            ff = scaler.fit_transform(ff, ff=False)
-            target = scaler.fit_transform(target, ff=True)
-
-            # output prediction
-            pred = model(ff, skull, tinput)
-            dice = batch_metrics(pred, target)
-
-            dice_score.append(dice)
-            pred_list.append(pred.squeeze().detach().cpu())
-            target_list.append(target)
-            
-            toc = time.time()
-            time_remain = datetime.timedelta(seconds=(len(test_dataloader)-i)*(toc-tic))
-            
-            sys.stdout.write(
-            "\r[Batch %d/%d] [Dice : %f] [Time left : %f]"
-            % (
-                i+1,
-                len(test_dataloader),
-                dice,
-                time_remain
-                )
-            )
-
-    # result list flattening
-    target_list = [item for sublist in target_list for item in sublist]
-    pred_list = [item for sublist in pred_list for item in sublist]
-
-    # display the test results
-    print("================================")
-    print("Mean dice score :",np.mean(dice_score))
-    print("Median dice score :",np.median(dice_score))
-    print("Std :",np.std(dice_score))
-
-    return target_list, pred_list, dice_score
 
 if __name__ == "__main__":
 
@@ -85,12 +31,20 @@ if __name__ == "__main__":
     device = torch.device('cuda') if opt.cuda else 'cpu'
 
     # Define model
-    model = EncoderUNet2x()
-    if opt.parallel: model = torch.nn.DataParallel(model)
-    model.load_state_dict(torch.load(PATH, map_location=device))
+    if opt.model == 'ae': model = CNNModel(skip=False)
+    elif opt.model=='unet': model=CNNModel(skip=True)
+    elif opt.model == 'swin': model = SwinUNet(device=device)
+    
+    saved_dict = torch.load(PATH, map_location=device)
+    model.load_state_dict(saved_dict['model_state_dict']) if 'model_state_dict' in saved_dict.keys() else model.load_state_dict(saved_dict)
     model.to(device)
 
-    pred, target, score = eval(model, test_dataloader)
+    pred, target, dice, dist, delta = eval(model, test_dataloader, device)
+    
+    print("===============================")
+    print("Dice : %.2f +- %.2f"%(np.mean(dice)*100, np.std(dice)*100))
+    print("Dist : %.2f +- %.2f"%(np.mean(dist), np.std(dist)))
+    print("Delta : %.2f +- %.2f"%(np.mean(delta)*100, np.std(delta)*100))
     
     # optional : save result images
-    savefig(target, opt.run_name, thres=False)
+    if opt.plot: savefig(target, opt.run_name, thres=False)
