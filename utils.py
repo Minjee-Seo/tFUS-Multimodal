@@ -10,10 +10,6 @@ from typing import Tuple
 import math
 import matplotlib.pyplot as plt
 
-def lambda_rule(epoch):
-        lr_l = 1.0 - max(0, epoch - opt.num_epoch) / float(opt.decay_epoch)
-        return lr_l
-
 class MinMaxScaling:
     '''
     input : pytorch tensor

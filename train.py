@@ -35,6 +35,10 @@ parser.add_argument('--cuda', action='store_true', default=False, help="Use GPU"
 parser.add_argument('--ckpt', type=arg_list, default=None, help="Save checkpoint at certain epoch. usage: [1,10,100,150]")
 opt = parser.parse_args()
 
+def lambda_rule(epoch):
+        lr_l = 1.0 - max(0, epoch - opt.num_epoch) / float(opt.decay_epoch)
+        return lr_l
+
 if __name__ == "__main__":
     
     print(opt)
