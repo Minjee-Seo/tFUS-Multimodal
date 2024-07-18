@@ -1,8 +1,6 @@
 import os
-import sys
 import ast
 import time
-import datetime
 import argparse
 import torch
 from torch.optim.lr_scheduler import LambdaLR
@@ -13,7 +11,7 @@ warnings.filterwarnings("ignore")
 from dataset import load_dataset
 from models_cnn import CNNModel, weights_init_cnn
 from models_swin import SwinUNet, weights_init_swin
-from utils import train_one_epoch, val_one_epoch
+from utils import train_one_epoch, val_one_epoch, lambda_rule
 
 def arg_list(s):
     v = ast.literal_eval(s)
@@ -36,10 +34,6 @@ parser.add_argument('--init_model', action='store_true', default=False)
 parser.add_argument('--cuda', action='store_true', default=False, help="Use GPU")
 parser.add_argument('--ckpt', type=arg_list, default=None, help="Save checkpoint at certain epoch. usage: [1,10,100,150]")
 opt = parser.parse_args()
-
-def lambda_rule(epoch):
-        lr_l = 1.0 - max(0, epoch - opt.num_epoch) / float(opt.decay_epoch)
-        return lr_l
 
 if __name__ == "__main__":
     
