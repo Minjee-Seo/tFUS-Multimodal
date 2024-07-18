@@ -44,4 +44,6 @@ if __name__ == "__main__":
     print("Delta : %.2f +- %.2f"%(np.mean(delta)*100, np.std(delta)*100))
     
     # optional : save result images
-    if opt.plot: savefig(target, opt.run_name, thres=False)
+    if opt.plot:
+        savefig(target, opt.run_name, thres=False)
+        savefig(target, opt.run_name, thres=True)
