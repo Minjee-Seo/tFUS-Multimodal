@@ -3,6 +3,7 @@ import ast
 import time
 import argparse
 import torch
+import pickle
 from torch.optim.lr_scheduler import LambdaLR
 
 import warnings
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     scheduler = LambdaLR(optimizer, lr_lambda = lambda_rule) if opt.decay_epoch!=0 else None
 
     val_score_max = 0
-    train_score = []
+    train_dice, train_dist, train_delta = [], [], []
     
     # Training process
     for epoch in range(1, train_epoch+1):
@@ -73,7 +74,7 @@ if __name__ == "__main__":
         start_time = time.time()
          
         model.train()
-        train_dice, train_dist, train_delta = train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, device, scheduler)
+        dice, dist, delta = train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, device, scheduler)
         model.eval()
         val_score = val_one_epoch(epoch, train_epoch, model, valid_dataloader, device)
         
@@ -89,6 +90,15 @@ if __name__ == "__main__":
                  },
                 "%s/epoch_%d.pth"%(opt.run_name, epoch)
             )
+        
+        train_dice.append(dice)
+        train_dist.append(dist)
+        train_delta.append(delta)
             
-    # save the trained model
+    train_results = {'dice':train_dice, 'dist':train_dist, 'delta':train_delta}
+    
+    # save the trained model and results
     torch.save(model.state_dict(), "%s/epoch_%d.pth"%(opt.run_name, train_epoch))
+    
+    with open('%s/epoch_%d.pickle','wb') as f:
+        pickle.dump(train_results, f)
