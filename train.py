@@ -100,5 +100,5 @@ if __name__ == "__main__":
     # save the trained model and results
     torch.save(model.state_dict(), "%s/epoch_%d.pth"%(opt.run_name, train_epoch))
     
-    with open('%s/epoch_%d.pickle','wb') as f:
+    with open('%s/epoch_%d.pickle'%(opt.run_name, train_epoch),'wb') as f:
         pickle.dump(train_results, f)
