@@ -42,4 +42,4 @@ You can get following model weights from [here](https://drive.google.com/file/d/
 3. Run `python test.py --your_project_name` for evaluation.
 
 ## Contact
-For any queries, please reach out to [Minjee Seo](islandz@yonsei.ac.kr).
+For any queries, please reach out to [Minjee Seo](mailto:islandz@yonsei.ac.kr).
