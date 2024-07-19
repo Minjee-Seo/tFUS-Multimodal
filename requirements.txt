@@ -1,0 +1,8 @@
+torch==1.12.1
+tqdm==4.64.1
+timm==0.9.16
+einops==0.7.0
+matplotlib==3.7.2
+numpy==1.24.3
+h5py==3.7.0
+natsort==8.2.0
