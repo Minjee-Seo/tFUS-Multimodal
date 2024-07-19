@@ -7,6 +7,7 @@ This repository contains the implementation of networks designed for real-time s
 - Convolutional neural network (CNN) based Autoencoder and U-Net
 - Swin Transformer based U-Net
 - Python codes for training, evaluation, loading dataset
+> Note: Dataset is not provided due to privacy concerns.
 
 ## Requirements
 - torch
@@ -35,3 +36,6 @@ Clone this repository: `git clone https://github.com/Minjee-Seo/tFUS-Multimodal.
 1. Edit `dataset.py` to load your data.
 2. Run `python train.py --your_project_name` for training.
 3. Run `python test.py --your_project_name` for evaluation.
+
+## Contact
+For any queries, please reach out to [Minjee Seo](islandz@yonsei.ac.kr).
