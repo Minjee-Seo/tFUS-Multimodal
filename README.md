@@ -26,6 +26,8 @@ Install all prerequisites with `pip install -r requirements.txt`
 Clone this repository: `git clone https://github.com/Minjee-Seo/tFUS-Multimodal.git`
 
 ## Pre-trained model weights
+You can get following model weights from [https://drive.google.com/file/d/1pE-xqcxV8AOtBDFlODUCiRsf2kdIvwIs/view?usp=sharing](here):
+
 - CT-trained Autoencoder (AECT.pth)
 - MR-trained Autoencoder (AEMR.pth)
 - CT-trained CNN U-Net (UNetCT.pth)
