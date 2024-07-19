@@ -7,6 +7,7 @@ This repository contains the implementation of networks designed for real-time s
 - Convolutional neural network (CNN) based Autoencoder and U-Net
 - Swin Transformer based U-Net
 - Python codes for training, evaluation, loading dataset
+- Pre-trained model weights
 > Note: Dataset is not provided due to privacy concerns.
 
 ## Requirements
