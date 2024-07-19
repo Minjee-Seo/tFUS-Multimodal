@@ -19,6 +19,7 @@ This repository contains the implementation of networks designed for real-time s
 - numpy
 - h5py
 - natsort
+
 Install all prerequisites with `pip install -r requirements.txt`
 
 ## Installation
