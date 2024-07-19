@@ -8,7 +8,7 @@ class Data(Dataset):
     def __init__(self, path=".", med="mri", eval=False):
 
         self.path = path
-        self.split = 'valid' if eval else 'train'
+        self.split = 'test' if eval else 'train'
 
         self.x = self._load_data("ff", self.split)
         self.s = self._load_data(med, self.split)

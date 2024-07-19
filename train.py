@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore")
 from dataset import load_dataset
 from models_cnn import CNNModel, weights_init_cnn
 from models_swin import SwinUNet, weights_init_swin
-from utils import train_one_epoch, val_one_epoch, lambda_rule
+from utils import train_one_epoch, val_one_epoch
 
 def arg_list(s):
     v = ast.literal_eval(s)
