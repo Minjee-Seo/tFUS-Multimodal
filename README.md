@@ -1,7 +1,7 @@
 # Multi-Modal Networks for Real-Time Monitoring of Intracranial Acoustic Field During tFUS Therapy
 
 ## Overview
-This repository contains the implementation of networks designed for real-time simulation of intracranial pressure map generated during transcranial focused ultrasound (tFUS) therapy.
+This repository contains the implementation of [Multi-modal networks for real-time monitoring of intracranial acoustic field during transcranial focused ultrasound therapy](https://www.sciencedirect.com/science/article/pii/S0169260724004516).
 
 ## Features
 - Convolutional neural network (CNN) based Autoencoder and U-Net
