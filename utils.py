@@ -139,6 +139,8 @@ def batch_metrics(pred_list, target_list):
     return total_dice/batch_size, total_dist/batch_size, total_delta/batch_size
 
 def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, device, scheduler=None):
+
+    model.train()
     
     loss_tot = 0
     dice_tot = 0
@@ -197,6 +199,8 @@ def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, devi
                 time_remain
             )
         )
+        sys.stdout.flush()
+        print('')
     
     if scheduler!=None: scheduler.step()
     
@@ -204,6 +208,7 @@ def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, devi
     
 def val_one_epoch(epoch, train_epoch, model, valid_dataloader, device):
 
+    model.eval()
     loss_tot = 0
     dice_tot = 0
     dist_tot = 0
@@ -258,6 +263,9 @@ def val_one_epoch(epoch, train_epoch, model, valid_dataloader, device):
                     time_remain
                 )
             )
+            sys.stdout.flush()
+    
+    print('')
         
     return dice_tot/len(valid_dataloader)
 

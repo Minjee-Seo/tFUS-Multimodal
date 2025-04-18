@@ -13,28 +13,7 @@ from dataset import load_dataset
 from models_cnn import CNNModel, weights_init_cnn
 from models_swin import SwinUNet, weights_init_swin
 from utils import train_one_epoch, val_one_epoch
-
-def arg_list(s):
-    v = ast.literal_eval(s)
-    return v
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--num_epoch", type=int, default=100, help="train epoch for constant lr")
-parser.add_argument("--decay_epoch", type=int, default=100, help="epoch for lr decay, set to 0 if not using learning rate scheduler")
-parser.add_argument("--train_bs", type=int, default=8, help="batch size for training")
-parser.add_argument("--valid_bs", type=int, default=8, help="batch size for validation")
-parser.add_argument("--lr", type=float, default=0.0002, help="initial learning rate")
-parser.add_argument("--b1", type=float, default=0.5, help="Adam coefficient")
-parser.add_argument("--b2", type=float, default=0.999, help="Adam coefficient")
-parser.add_argument("--weight_decay", type=float, default=0.05, help="Regularization")
-parser.add_argument('--modality', type=str, default='mri', help="Medical image modality (CT/MR)")
-parser.add_argument('--run_name', type=str, default='test_run', help="Run name")
-parser.add_argument('--model', type=str, default='unet', help="Choose model to train : [ae/unet/swin]")
-parser.add_argument('--save_best_model', action='store_true', default=True)
-parser.add_argument('--init_model', action='store_true', default=False)
-parser.add_argument('--cuda', action='store_true', default=False, help="Use GPU")
-parser.add_argument('--ckpt', type=arg_list, default=None, help="Save checkpoint at certain epoch. usage: [1,10,100,150]")
-opt = parser.parse_args()
+from config import load_train_config
 
 def lambda_rule(epoch):
         lr_l = 1.0 - max(0, epoch - opt.num_epoch) / float(opt.decay_epoch)
@@ -42,7 +21,9 @@ def lambda_rule(epoch):
 
 if __name__ == "__main__":
     
-    print(opt)
+    opt = load_train_config()
+    # print(opt)
+
     os.makedirs("%s" % opt.run_name, exist_ok=True)
     
     device = torch.device('cuda') if opt.cuda else 'cpu'
@@ -72,10 +53,8 @@ if __name__ == "__main__":
     for epoch in range(1, train_epoch+1):
         
         start_time = time.time()
-         
-        model.train()
+
         dice, dist, delta = train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, device, scheduler)
-        model.eval()
         val_score = val_one_epoch(epoch, train_epoch, model, valid_dataloader, device)
         
         if opt.save_best_model and val_score > val_score_max:

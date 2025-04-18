@@ -82,7 +82,7 @@ class Up(nn.Module):
     def forward(self, x):
         x = self.model(x)
         return x
-    14
+    
 class CNNModel(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, dropout=0.5, skip=True):
         super(CNNModel, self).__init__()

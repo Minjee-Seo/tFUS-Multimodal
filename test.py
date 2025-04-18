@@ -9,18 +9,12 @@ from dataset import load_dataset
 from models_cnn import CNNModel
 from models_swin import SwinUNet
 from utils import eval, savefig
+from config import load_test_config
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--cuda', action='store_true', default=False, help="Use GPU")
-parser.add_argument('--batch_size', type=int, default=8, help="Test batch size")
-parser.add_argument('--modality', type=str, default='mri', help="Select med.image modality (CT/MR)")
-parser.add_argument('--model', type=str, default='unet', help="Choose model to train : [ae/unet/swin]")
-parser.add_argument('--run_name', type=str, default='test_run', help="project name to load")
-parser.add_argument('--run_epoch', type=int, default=200, help="Trained epoch")
-parser.add_argument('--plot', action='store_true', default=False, help="Save result images")
-opt = parser.parse_args()
 
 if __name__ == "__main__":
+
+    opt = load_test_config()
 
     PATH = "./%s/epoch_%d.pth" % (opt.run_name, opt.run_epoch)
 
