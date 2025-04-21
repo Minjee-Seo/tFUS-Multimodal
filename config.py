@@ -23,6 +23,7 @@ def load_train_config():
     parser.add_argument('--init_model', action='store_true', default=False)
     parser.add_argument('--cuda', action='store_true', default=False, help="Use GPU")
     parser.add_argument('--ckpt', type=arg_list, default=None, help="Save checkpoint at certain epoch. usage: [1,10,100,150]")
+    parser.add_argument('--wandb_pj',      type=str,   default=None,    help='Specify project name if logging with wandb')
     
     return parser.parse_args()
 

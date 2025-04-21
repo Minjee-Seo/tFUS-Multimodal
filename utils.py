@@ -196,7 +196,7 @@ def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, devi
                 train_dice*100,
                 train_dist,
                 train_delta*100,
-                time_remain
+                time_remain[:-7]
             )
         )
         sys.stdout.flush()
@@ -204,7 +204,7 @@ def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, devi
     
     if scheduler!=None: scheduler.step()
     
-    return dice_tot/len(train_dataloader), dist_tot/len(train_dataloader), delta_tot/len(train_dataloader)
+    return loss_tot/len(train_dataloader), dice_tot/len(train_dataloader), dist_tot/len(train_dataloader), delta_tot/len(train_dataloader)
     
 def val_one_epoch(epoch, train_epoch, model, valid_dataloader, device):
 
@@ -260,14 +260,14 @@ def val_one_epoch(epoch, train_epoch, model, valid_dataloader, device):
                     valid_dice*100,
                     valid_dist,
                     valid_delta*100,
-                    time_remain
+                    time_remain[:-7]
                 )
             )
             sys.stdout.flush()
     
     print('')
         
-    return dice_tot/len(valid_dataloader)
+    return loss_tot/len(valid_dataloader), dice_tot/len(valid_dataloader), dist_tot/len(valid_dataloader), delta_tot/len(valid_dataloader)
 
 def eval(model, test_dataloader, device):
 
