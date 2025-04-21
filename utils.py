@@ -196,7 +196,7 @@ def train_one_epoch(epoch, train_epoch, model, optimizer, train_dataloader, devi
                 train_dice*100,
                 train_dist,
                 train_delta*100,
-                time_remain[:-7]
+                str(time_remain)[:-7]
             )
         )
         sys.stdout.flush()
@@ -260,7 +260,7 @@ def val_one_epoch(epoch, train_epoch, model, valid_dataloader, device):
                     valid_dice*100,
                     valid_dist,
                     valid_delta*100,
-                    time_remain[:-7]
+                    str(time_remain)[:-7]
                 )
             )
             sys.stdout.flush()
